@@ -1,18 +1,15 @@
 package xyz.fz.http.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +37,7 @@ public class HttpServer {
                             ch.pipeline().addLast(new HttpServerCodec());
                             ch.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
                             ch.pipeline().addLast(new HttpContentCompressor());
-                            ch.pipeline().addLast(new HttpHandler());
+                            ch.pipeline().addLast(new ServerHandler());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
@@ -57,6 +54,43 @@ public class HttpServer {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
             LOGGER.warn("notify server shutdown...");
+        }
+    }
+
+    private static class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+
+        private static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
+
+            String httpRequestInfo = "---------------------------- full request header ----------------------------"
+                    + "\r\n" + msg + "\r\n"
+                    + "---------------------------- full request body ----------------------------"
+                    + "\r\n" + msg.content().toString(CharsetUtil.UTF_8) + "\r\n"
+                    + "---------------------------- response html ----------------------------"
+                    + "\r\n" + "<html><head>aaa</head><body>bbb</body></html>" + "\r\n";
+
+            // full http request
+            System.out.println(httpRequestInfo);
+
+            // write full http response
+            DefaultFullHttpResponse response = new DefaultFullHttpResponse(
+                    HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
+                    Unpooled.copiedBuffer(httpRequestInfo.replace("\r\n", "<br/>"), CharsetUtil.UTF_8));
+
+            response.headers()
+                    .add(HttpHeaderNames.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
+                    .add(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes())
+                    .add(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+
+            ctx.writeAndFlush(response);
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            cause.printStackTrace();
+            ctx.close();
         }
     }
 }
