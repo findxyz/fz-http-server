@@ -50,9 +50,9 @@ public class HttpClient {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-            System.out.println("============================ full http response header ============================");
+            System.out.println("============================ full response header ============================");
             System.out.println(msg);
-            System.out.println("============================ full http response body ============================");
+            System.out.println("============================ full response body ============================");
             System.out.println(msg.content().toString(CharsetUtil.UTF_8).replace("<br/>", "\r\n"));
             ctx.channel().close();
         }
