@@ -45,7 +45,7 @@ public class HttpServer {
 
             ChannelFuture future = serverBootstrap.bind("0.0.0.0", httpServerPort).sync();
 
-            LOGGER.warn("notify server startup...");
+            LOGGER.warn("http server startup...");
 
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
@@ -53,7 +53,7 @@ public class HttpServer {
         } finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
-            LOGGER.warn("notify server shutdown...");
+            LOGGER.warn("http server shutdown...");
         }
     }
 
