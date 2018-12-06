@@ -13,11 +13,11 @@ public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
 
-        String httpRequestInfo = "------------------------- full request header -------------------------"
+        String httpRequestInfo = "---------------------------- full request header ----------------------------"
                 + "\r\n" + msg + "\r\n"
-                + "------------------------- full request body -------------------------"
+                + "---------------------------- full request body ----------------------------"
                 + "\r\n" + msg.content().toString(CharsetUtil.UTF_8) + "\r\n"
-                + "------------------------- response html -------------------------"
+                + "---------------------------- response html ----------------------------"
                 + "\r\n" + "<html><head>aaa</head><body>bbb</body></html>" + "\r\n";
 
         // full http request

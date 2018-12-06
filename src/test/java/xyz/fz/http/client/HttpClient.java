@@ -1,4 +1,4 @@
-package xyz.fz.http;
+package xyz.fz.http.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;

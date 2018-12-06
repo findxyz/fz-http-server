@@ -1,4 +1,4 @@
-package xyz.fz.runner;
+package xyz.fz.http.runner;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
