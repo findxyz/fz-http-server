@@ -1,34 +1,44 @@
-package xyz.fz.http.server.ssl;
+package xyz.fz.http.configuration;
 
-import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.util.Properties;
 
-public class SSLEngineFactory {
+@Configuration
+public class SSLContextConfiguration {
+    @Value("${ssl.keystore}")
+    private String sslKeystore;
 
-    private static SSLContext sslContext;
+    @Value("${ssl.keystore.password}")
+    private String sslKeystorePassword;
 
-    static {
-        initSslContext();
+    @Value("${ssl.enable}")
+    private boolean sslEnable;
+
+    @Bean
+    public SSLContext sslContext() {
+        if (sslEnable) {
+            return yesSSL();
+        } else {
+            return noSSL();
+        }
     }
 
-    private static void initSslContext() {
+    private SSLContext yesSSL() {
+        SSLContext sslContext = null;
         InputStream inputStream = null;
         try {
-            Properties applicationProperties = PropertiesLoaderUtils.loadAllProperties("application.properties");
-            String sslKeystore = applicationProperties.getProperty("ssl.keystore");
-            inputStream = SSLEngineFactory.class.getResourceAsStream(sslKeystore);
+            inputStream = this.getClass().getResourceAsStream(sslKeystore);
             if (inputStream == null) {
                 throw new RuntimeException("keystore file not found");
             }
-            String sslKeystorePassword = applicationProperties.getProperty("ssl.keystore.password");
 
             KeyStore keystore = KeyStore.getInstance("JKS");
             keystore.load(inputStream, sslKeystorePassword.toCharArray());
@@ -49,11 +59,17 @@ public class SSLEngineFactory {
                 }
             }
         }
+        return sslContext;
     }
 
-    public static SSLEngine create() {
-        SSLEngine sslEngine = sslContext.createSSLEngine();
-        sslEngine.setUseClientMode(false);
-        return sslEngine;
+    private SSLContext noSSL() {
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sslContext;
     }
 }

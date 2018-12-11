@@ -15,7 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import xyz.fz.http.server.ssl.SSLEngineFactory;
+
+import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 
 @Component
 public class HttpServer {
@@ -28,6 +31,12 @@ public class HttpServer {
     @Value("${http.server.port}")
     private int httpServerPort;
 
+    @Value("${ssl.enable}")
+    private boolean sslEnable;
+
+    @Resource
+    private SSLContext sslContext;
+
     public void start() {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -39,7 +48,11 @@ public class HttpServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addFirst(new SslHandler(SSLEngineFactory.create()));
+                            if (sslEnable) {
+                                SSLEngine sslEngine = sslContext.createSSLEngine();
+                                sslEngine.setUseClientMode(false);
+                                ch.pipeline().addFirst(new SslHandler(sslEngine));
+                            }
                             ch.pipeline().addLast(new HttpServerCodec());
                             ch.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
                             ch.pipeline().addLast(new HttpContentCompressor());
