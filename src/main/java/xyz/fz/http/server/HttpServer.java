@@ -9,16 +9,21 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import xyz.fz.http.server.ssl.SSLEngineFactory;
 
 @Component
 public class HttpServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer.class);
+
+    @Value("${http.server.host}")
+    private String httpServerHost;
 
     @Value("${http.server.port}")
     private int httpServerPort;
@@ -34,6 +39,7 @@ public class HttpServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addFirst(new SslHandler(SSLEngineFactory.create()));
                             ch.pipeline().addLast(new HttpServerCodec());
                             ch.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
                             ch.pipeline().addLast(new HttpContentCompressor());
@@ -43,7 +49,7 @@ public class HttpServer {
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            ChannelFuture future = serverBootstrap.bind("0.0.0.0", httpServerPort).sync();
+            ChannelFuture future = serverBootstrap.bind(httpServerHost, httpServerPort).sync();
 
             LOGGER.warn("http server startup...");
 

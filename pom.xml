@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>xyz.fz</groupId>
-    <artifactId>http</artifactId>
+    <artifactId>http.server</artifactId>
     <version>0.0.1</version>
     <packaging>jar</packaging>
 
-    <name>http</name>
+    <name>netty http server</name>
     <description>netty http server</description>
 
     <parent>
