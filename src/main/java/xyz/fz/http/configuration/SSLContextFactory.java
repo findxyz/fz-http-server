@@ -1,8 +1,7 @@
 package xyz.fz.http.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -11,27 +10,16 @@ import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
-@Configuration
-public class SSLContextConfiguration {
+@Component
+public class SSLContextFactory {
+
     @Value("${ssl.keystore}")
     private String sslKeystore;
 
     @Value("${ssl.keystore.password}")
     private String sslKeystorePassword;
 
-    @Value("${ssl.enable}")
-    private boolean sslEnable;
-
-    @Bean
-    public SSLContext sslContext() {
-        if (sslEnable) {
-            return yesSSL();
-        } else {
-            return noSSL();
-        }
-    }
-
-    private SSLContext yesSSL() {
+    public SSLContext create() {
         SSLContext sslContext = null;
         InputStream inputStream = null;
         try {
@@ -58,17 +46,6 @@ public class SSLContextConfiguration {
                     e.printStackTrace();
                 }
             }
-        }
-        return sslContext;
-    }
-
-    private SSLContext noSSL() {
-        SSLContext sslContext = null;
-        try {
-            sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, null, null);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return sslContext;
     }
